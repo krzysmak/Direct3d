@@ -128,12 +128,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DXSample.cpp" />
+    <ClCompile Include="Main.cpp" />
     <ClCompile Include="Triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="d3dx12.h" />
+    <ClInclude Include="DXSample.h" />
+    <ClInclude Include="DXSampleHelper.h" />
+    <ClInclude Include="stdafx.h" />
     <ClInclude Include="Triangle.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\WinPixEventRuntime.1.0.220810001\build\WinPixEventRuntime.targets" Condition="Exists('packages\WinPixEventRuntime.1.0.220810001\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Ten projekt zawiera odwołania do pakietów NuGet, których nie ma na tym komputerze. Użyj przywracania pakietów NuGet, aby je pobrać. Aby uzyskać więcej informacji, zobacz http://go.microsoft.com/fwlink/?LinkID=322105. Brakujący plik: {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\WinPixEventRuntime.1.0.220810001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\WinPixEventRuntime.1.0.220810001\build\WinPixEventRuntime.targets'))" />
+  </Target>
 </Project>

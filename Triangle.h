@@ -5,18 +5,13 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include <dxgi1_6.h>
-#include <d3d12.h>
-#include <Windows.h>
-#include <wrl.h>
-#include <string>
-#include <DirectXMath.h>
-#include <exception>
+#include "DXSample.h"
+#include "stdafx.h"
 
 using namespace DirectX;
 using namespace Microsoft::WRL;
 
-class D3D12HelloTriangle
+class D3D12HelloTriangle : public DXSample
 {
 public:
     D3D12HelloTriangle(UINT width, UINT height, std::wstring name);

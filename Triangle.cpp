@@ -1,19 +1,6 @@
 #include "Triangle.h"
 
 
-namespace DX
-{
-    inline void ThrowIfFailed(HRESULT hr)
-    {
-        if (FAILED(hr))
-        {
-            // Set a breakpoint on this line to catch DirectX API errors
-            throw std::exception();
-        }
-    }
-}
-using namespace DX;
-
 void D3D12HelloTriangle::OnInit()
 {
     LoadPipeline();
