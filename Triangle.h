@@ -23,7 +23,7 @@ class D3D12HelloTriangle
 public:
     D3D12HelloTriangle(UINT width, UINT height, std::wstring name);
 
-    virtual void OnInit();
+    virtual void OnInit(HWND hwnd);
     virtual void OnUpdate();
     virtual void OnRender();
     virtual void OnDestroy();
@@ -61,7 +61,7 @@ private:
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue;
 
-    void LoadPipeline();
+    void LoadPipeline(HWND hwnd);
     void LoadAssets();
     void PopulateCommandList();
     void WaitForPreviousFrame();

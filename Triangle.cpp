@@ -1,13 +1,13 @@
 #include "Triangle.h"
 
 
-void D3D12HelloTriangle::OnInit()
+void D3D12HelloTriangle::OnInit(HWND hwnd)
 {
-    LoadPipeline();
+    LoadPipeline(hwnd);
     LoadAssets();
 }
 
-void D3D12HelloTriangle::LoadPipeline()
+void D3D12HelloTriangle::LoadPipeline(HWND hwnd)
 {
 #if defined(_DEBUG)
     // Enable the D3D12 debug layer.
@@ -21,34 +21,16 @@ void D3D12HelloTriangle::LoadPipeline()
     }
 #endif
     ComPtr<IDXGIFactory4> factory;
-    HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
+    HRESULT hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&factory));
     if (!SUCCEEDED(hr))
         exit(0);
-    if (m_useWarpDevice)
-    {
-        ComPtr<IDXGIAdapter> warpAdapter;
-        ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
-
-        ThrowIfFailed(D3D12CreateDevice(
-            warpAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&m_device)
-        ));
-    }
-    else
-    {
-        ComPtr<IDXGIAdapter1> hardwareAdapter;
-        GetHardwareAdapter(factory.Get(), &hardwareAdapter);
-
-        hr = D3D12CreateDevice(
-            hardwareAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&m_device)
-        );
-        if (!SUCCEEDED(hr))
-            exit(0);
-    }
-
+    hr = D3D12CreateDevice(
+        nullptr,
+        D3D_FEATURE_LEVEL_12_0,
+        IID_PPV_ARGS(&m_device)
+    );
+    if (!SUCCEEDED(hr))
+        exit(0);
     // Describe and create the command queue.
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -59,21 +41,23 @@ void D3D12HelloTriangle::LoadPipeline()
         exit(0);
 
     // Describe and create the swap chain.
-    DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     swapChainDesc.BufferCount = FrameCount;
-    swapChainDesc.BufferDesc.Width = m_width;
-    swapChainDesc.BufferDesc.Height = m_height;
-    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.Width = 0;
+    swapChainDesc.Height = 0;
+    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc.OutputWindow = Win32Application::GetHwnd();
+    //swapChainDesc.OutputWindow = Win32Application::GetHwnd();
     swapChainDesc.SampleDesc.Count = 1;
-    swapChainDesc.Windowed = TRUE;
-
-    ComPtr<IDXGISwapChain> swapChain;
-    hr = factory->CreateSwapChain(
+    //swapChainDesc.Windowed = TRUE;
+    ComPtr<IDXGISwapChain1> swapChain;
+    hr = factory->CreateSwapChainForHwnd(
         m_commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+        hwnd,
         &swapChainDesc,
+        nullptr,
+        nullptr,
         &swapChain
     );
     if (!SUCCEEDED(hr))
@@ -84,7 +68,7 @@ void D3D12HelloTriangle::LoadPipeline()
         exit(0);
 
     // This sample does not support fullscreen transitions.
-    hr = factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER);
+    hr = factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
     if (!SUCCEEDED(hr))
         exit(0);
 
@@ -155,12 +139,12 @@ void D3D12HelloTriangle::LoadAssets()
         UINT compileFlags = 0;
 #endif
 
-        hr = D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr);
-        if (!SUCCEEDED(hr))
-            exit(0);
-        hr = D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr);
-        if (!SUCCEEDED(hr))
-            exit(0);
+        //hr = D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr);
+        //if (!SUCCEEDED(hr))
+        //    exit(0);
+        //hr = D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr);
+        //if (!SUCCEEDED(hr))
+        //    exit(0);
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -173,17 +157,25 @@ void D3D12HelloTriangle::LoadAssets()
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
         psoDesc.pRootSignature = m_rootSignature.Get();
-        psoDesc.VS = { reinterpret_cast<UINT8*>(vertexShader->GetBufferPointer()), vertexShader->GetBufferSize() };
-        psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShader->GetBufferPointer()), pixelShader->GetBufferSize() };
+        //psoDesc.VS = { reinterpret_cast<UINT8*>(vertexShader->GetBufferPointer()), vertexShader->GetBufferSize() };
+        //psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShader->GetBufferPointer()), pixelShader->GetBufferSize() };
+        psoDesc.VS = { vs_main, sizeof(vs_main) }, // bytecode vs w tablicy vs_main
+        psoDesc.PS = { ps_main, sizeof(ps_main) }, // bytecode ps w tablicy ps_main
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
         psoDesc.DepthStencilState.DepthEnable = FALSE;
         psoDesc.DepthStencilState.StencilEnable = FALSE;
         psoDesc.SampleMask = UINT_MAX;
-        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 1;
+        //psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        //psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
+        psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+        psoDesc.NumRenderTargets = 1,  // Potok zapisuje tylko w jednym celu na raz
+        //psoDesc.RTVFormats = { DXGI_FORMAT_R8G8B8A8_UNORM },
+        psoDesc.SampleDesc = { .Count = 1, .Quality = 0 }.
+
         hr = m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState));
         if (!SUCCEEDED(hr))
             exit(0);
@@ -203,6 +195,7 @@ void D3D12HelloTriangle::LoadAssets()
     // Create the vertex buffer.
     {
         // Define the geometry for a triangle.
+        FLOAT m_aspectRatio = 1.0f; // w³asna zmienna
         Vertex triangleVertices[] =
         {
             { { 0.0f, 0.25f * m_aspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },

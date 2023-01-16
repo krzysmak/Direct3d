@@ -33,4 +33,12 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>Pliki źródłowe</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Pliki źródłowe</Filter>
+    </FxCompile>
+  </ItemGroup>
 </Project>
