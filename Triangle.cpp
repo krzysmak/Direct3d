@@ -117,6 +117,11 @@ void D3D12HelloTriangle::LoadAssets()
     HRESULT hr;
     {
         D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+        rootSignatureDesc.NumParameters = 0;
+        rootSignatureDesc.NumStaticSamplers = 0;
+        rootSignatureDesc.pParameters = 0;
+        rootSignatureDesc.pStaticSamplers = 0;
         //rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
@@ -140,20 +145,6 @@ void D3D12HelloTriangle::LoadAssets()
 #else
         UINT compileFlags = 0;
 #endif
-
-        //hr = D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr);
-        //if (!SUCCEEDED(hr))
-        //    exit(0);
-        //hr = D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr);
-        //if (!SUCCEEDED(hr))
-        //    exit(0);
-
-        // Define the vertex input layout.
-        //D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-        //{
-        //    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        //    { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-        //};
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};

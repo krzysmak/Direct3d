@@ -73,16 +73,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     {
         KillTimer(hwnd, 1);
         triangle->OnDestroy();
-        free(triangle);
+        //destroy(triangle);
         PostQuitMessage(0);
         return 0;
     }
     case WM_PAINT:
     {
-        //g->updateRC(hwnd);
         triangle->OnRender();
-        //InvalidateRect(hwnd, &g->rc, 0);
-
         return 0;
     }
     }
