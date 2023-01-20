@@ -2,6 +2,7 @@
 #include "src/vertex_shader.h"
 #include "src/pixel_shader.h"
 
+
 void D3D12HelloTriangle::OnInit(HWND hwnd)
 {
     LoadPipeline(hwnd);
@@ -188,7 +189,7 @@ void D3D12HelloTriangle::LoadAssets()
         psoDesc.RasterizerState.AntialiasedLineEnable = FALSE;
         psoDesc.RasterizerState.ForcedSampleCount = 0;
         psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-        /*
+        
         D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
         {
             .SemanticName = "POSITION",
@@ -208,27 +209,6 @@ void D3D12HelloTriangle::LoadAssets()
             .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
             .InstanceDataStepRate = 0
         }
-        };
-        */
-        D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-            {
-                "POSITION",
-                0,
-                DXGI_FORMAT_R32G32B32_FLOAT,
-                0,
-                0,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                0
-            },
-            {
-                "COLOR",
-                0,
-                DXGI_FORMAT_R32G32B32A32_FLOAT,
-                0,
-                12,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-                0
-            }
         };
         psoDesc.InputLayout.NumElements = _countof(inputLayout);
         psoDesc.InputLayout.pInputElementDescs = inputLayout;

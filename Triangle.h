@@ -21,7 +21,7 @@ using namespace Microsoft::WRL;
 class D3D12HelloTriangle
 {
 public:
-    D3D12HelloTriangle(UINT width, UINT height, std::wstring name);
+    //D3D12HelloTriangle(UINT width, UINT height, std::wstring name);
 
     virtual void OnInit(HWND hwnd);
     virtual void OnUpdate();
