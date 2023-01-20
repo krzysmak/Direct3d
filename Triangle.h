@@ -23,7 +23,7 @@ class D3D12HelloTriangle
 public:
     //D3D12HelloTriangle(UINT width, UINT height, std::wstring name);
 
-    virtual void OnInit(HWND hwnd);
+    virtual RECT OnInit(HWND hwnd);
     virtual void OnUpdate();
     virtual void OnRender();
     virtual void OnDestroy();

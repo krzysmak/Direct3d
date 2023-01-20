@@ -1,12 +1,30 @@
 #include "Triangle.h"
 #include "src/vertex_shader.h"
 #include "src/pixel_shader.h"
+#include <Windows.h>
 
-
-void D3D12HelloTriangle::OnInit(HWND hwnd)
+RECT D3D12HelloTriangle::OnInit(HWND hwnd)
 {
+    D3D12_RECT rc_temp;
+    if (GetClientRect(hwnd, &rc_temp) == 0) // Size of current used window
+        throw "Error in get client rect";
+    m_scissorRect = rc_temp;
+    m_viewport = {
+        .TopLeftX = 0.0f,
+        .TopLeftY = 0.0f,
+        .Width = (FLOAT)((rc_temp.right) - (rc_temp.left)),	// aktualna szeroko obszaru roboczego okna (celu rend.)
+        .Height = (FLOAT)((rc_temp.bottom) - (rc_temp.top)),	// aktualna wysoko obszaru roboczego okna (celu rend.)
+        .MinDepth = 0.0f,
+        .MaxDepth = 1.0f,
+    };
     LoadPipeline(hwnd);
     LoadAssets();
+    return rc_temp;
+}
+
+FLOAT randColor() {
+    //srand(time(0));
+    return ((double)rand()) / RAND_MAX;
 }
 
 void D3D12HelloTriangle::LoadPipeline(HWND hwnd)
@@ -236,6 +254,7 @@ void D3D12HelloTriangle::LoadAssets()
     // Create the vertex buffer.
     {
         // Define the geometry for a triangle.
+        /*
         FLOAT m_aspectRatio = 1.0f; // w³asna zmienna
         Vertex triangleVertices[] =
         {
@@ -243,15 +262,31 @@ void D3D12HelloTriangle::LoadAssets()
             { { 0.25f, -0.25f * m_aspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
             { { -0.25f, -0.25f * m_aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
         };
+        */
+        struct vertex_t {
+            FLOAT position[3];
+            FLOAT color[4];
+        };
 
-        const UINT vertexBufferSize = sizeof(triangleVertices);
+
+
+        size_t const VERTEX_SIZE = sizeof(vertex_t) / sizeof(FLOAT);
+        vertex_t triangle_data[] = {
+          { 0.0f, 1.0f, 0.5f,         0.0f, 1.0f, 0.0f, 1.0f },
+          { 1.0f, 0.0f, 0.5f,         1.0f, 0.0f, 0.0f, 1.0f },
+          { -1.0f, -1.0f, 0.5f,       0.0f, 0.0f, 1.0f, 1.0f }
+        };
+        size_t const VERTEX_BUFFER_SIZE = sizeof(triangle_data);
+        size_t const NUM_VERTICES = VERTEX_BUFFER_SIZE / sizeof(vertex_t);
+
+        //const UINT vertexBufferSize = sizeof(triangleVertices);
 
         // Note: using upload heaps to transfer static data like vert buffers is not 
         // recommended. Every time the GPU needs it, the upload heap will be marshalled 
         // over. Please read up on Default Heap usage. An upload heap is used here for 
         // code simplicity and because there are very few verts to actually transfer.
         CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
-        auto desc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
         hr = m_device->CreateCommittedResource(
             &heapProps,
             D3D12_HEAP_FLAG_NONE,
@@ -269,13 +304,13 @@ void D3D12HelloTriangle::LoadAssets()
         if (!SUCCEEDED(hr))
             exit(0);
 
-        memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
+        memcpy(pVertexDataBegin, triangle_data, sizeof(triangle_data));
         m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+        m_vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -355,8 +390,8 @@ void D3D12HelloTriangle::PopulateCommandList()
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // Record commands.
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    const float randomColor[] = { randColor(), randColor(), randColor(), 1.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, randomColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->DrawInstanced(3, 1, 0, 0);
