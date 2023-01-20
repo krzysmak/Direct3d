@@ -1,6 +1,6 @@
 #include "Triangle.h"
-#include "vertex_shader.h"
-#include "pixel_shader.h"
+#include "src/vertex_shader.h"
+#include "src/pixel_shader.h"
 
 void D3D12HelloTriangle::OnInit(HWND hwnd)
 {
@@ -240,11 +240,11 @@ void D3D12HelloTriangle::LoadAssets()
         //psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
-        psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
-        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-        psoDesc.NumRenderTargets = 1,  // Potok zapisuje tylko w jednym celu na raz
+        psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        psoDesc.NumRenderTargets = 1;  // Potok zapisuje tylko w jednym celu na raz
         //psoDesc.RTVFormats = { DXGI_FORMAT_R8G8B8A8_UNORM },
-        psoDesc.SampleDesc = { 1, 0 }.
+        psoDesc.SampleDesc = { 1, 0 };
 
         hr = m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState));
         if (!SUCCEEDED(hr))
