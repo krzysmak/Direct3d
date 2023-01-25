@@ -134,13 +134,29 @@ void D3D12HelloTriangle::LoadAssets()
     // Create an empty root signature.
     HRESULT hr;
     {
+        D3D12_DESCRIPTOR_RANGE descriptorRange;
+        descriptorRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        descriptorRange.NumDescriptors = 1;
+        descriptorRange.BaseShaderRegister = 0;
+        descriptorRange.RegisterSpace = 0;
+        descriptorRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+        D3D12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
+        rootParameters[0].DescriptorTable.pDescriptorRanges = &descriptorRange;
+        rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
         D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-        rootSignatureDesc.NumParameters = 0;
+        rootSignatureDesc.NumParameters = _countof(rootParameters);
+        rootSignatureDesc.pParameters = rootParameters;
         rootSignatureDesc.NumStaticSamplers = 0;
-        rootSignatureDesc.pParameters = 0;
-        rootSignatureDesc.pStaticSamplers = 0;
-        //rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        rootSignatureDesc.pStaticSamplers = nullptr;
+        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -438,4 +454,8 @@ void D3D12HelloTriangle::OnDestroy()
     WaitForPreviousFrame();
 
     CloseHandle(m_fenceEvent);
+}
+
+void D3D12HelloTriangle::OnTimer(FLOAT& angle) {
+
 }

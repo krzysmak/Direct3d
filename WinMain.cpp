@@ -80,7 +80,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         return 0;
     }
     case WM_TIMER:
-        triangle->onTimer(angle);
+        triangle->OnTimer(angle);
         InvalidateRect(hwnd, &rc, 0);
         return 0;
     case WM_PAINT:
