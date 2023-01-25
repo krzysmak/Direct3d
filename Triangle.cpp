@@ -3,6 +3,13 @@
 #include "src/pixel_shader.h"
 #include <Windows.h>
 
+struct vs_const_buffer_t {
+    XMFLOAT4X4 matWorldViewProj;
+    XMFLOAT4 padding[(256 - sizeof(XMFLOAT4X4)) / sizeof(XMFLOAT4)];
+};
+
+vs_const_buffer_t *constantBufferData;
+
 RECT D3D12HelloTriangle::OnInit(HWND hwnd)
 {
     D3D12_RECT rc_temp;
@@ -98,9 +105,10 @@ void D3D12HelloTriangle::LoadPipeline(HWND hwnd)
     {
         // Describe and create a render target view (RTV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = FrameCount;
-        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        rtvHeapDesc.NumDescriptors = 1;
+        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        rtvHeapDesc.NodeMask = 0;
         hr = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap));
         if (!SUCCEEDED(hr))
             exit(0);
@@ -134,14 +142,30 @@ void D3D12HelloTriangle::LoadAssets()
     // Create an empty root signature.
     HRESULT hr;
     {
-        D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-        rootSignatureDesc.NumParameters = 0;
-        rootSignatureDesc.NumStaticSamplers = 0;
-        rootSignatureDesc.pParameters = 0;
-        rootSignatureDesc.pStaticSamplers = 0;
-        //rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        D3D12_DESCRIPTOR_RANGE descriptorRange;
+        descriptorRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        descriptorRange.NumDescriptors = 1;
+        descriptorRange.BaseShaderRegister = 0;
+        descriptorRange.RegisterSpace = 0;
+        descriptorRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+        D3D12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
+        rootParameters[0].DescriptorTable.pDescriptorRanges = &descriptorRange;
+        rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+        D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.NumParameters = _countof(rootParameters);
+        rootSignatureDesc.pParameters = rootParameters;
+        rootSignatureDesc.NumStaticSamplers = 0;
+        rootSignatureDesc.pStaticSamplers = nullptr;
+        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+        
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
         hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
@@ -285,17 +309,41 @@ void D3D12HelloTriangle::LoadAssets()
         // recommended. Every time the GPU needs it, the upload heap will be marshalled 
         // over. Please read up on Default Heap usage. An upload heap is used here for 
         // code simplicity and because there are very few verts to actually transfer.
-        CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
-        auto desc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
+        D3D12_HEAP_PROPERTIES heapProperties;
+        heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 1;
+        heapProperties.VisibleNodeMask = 1;
+        D3D12_RESOURCE_DESC resourceDesc;
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        resourceDesc.Alignment = 0;
+        resourceDesc.Width = VERTEX_BUFFER_SIZE;  // buffer size in bytes, must be a multiple of 256 bytes
+        resourceDesc.Height = 1;
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+        resourceDesc.SampleDesc = { 1, 0 };
+        resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
         hr = m_device->CreateCommittedResource(
-            &heapProps,
+            &heapProperties,
             D3D12_HEAP_FLAG_NONE,
-            &desc,
+            &resourceDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&m_vertexBuffer));
         if (!SUCCEEDED(hr))
             exit(0);
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+        cbvDesc.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = VERTEX_BUFFER_SIZE;
+        
+        m_device->CreateConstantBufferView(&cbvDesc, m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+
+        
+        XMMATRIX identityMatrix = XMMatrixIdentity();
+        XMStoreFloat4x4(&constantBufferData->matWorldViewProj, identityMatrix);
 
         // Copy the triangle data to the vertex buffer.
         UINT8* pVertexDataBegin;
@@ -376,7 +424,8 @@ void D3D12HelloTriangle::PopulateCommandList()
     hr = m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get());
     if (!SUCCEEDED(hr))
         exit(0);
-
+    m_commandList->SetDescriptorHeaps(1, &m_rtvHeap);
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_rtvHeap->GetGPUDescriptorHandleForHeapStart());
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->RSSetViewports(1, &m_viewport);
@@ -438,4 +487,35 @@ void D3D12HelloTriangle::OnDestroy()
     WaitForPreviousFrame();
 
     CloseHandle(m_fenceEvent);
+}
+
+void D3D12HelloTriangle::onTimer(FLOAT &angle) {
+    XMMATRIX wvp_matrix;
+    angle += (1 / 64);
+    wvp_matrix = XMMatrixMultiply(
+        XMMatrixRotationY(2.5f * angle),	// zmienna angle zmienia siê
+        // o 1 / 64 co ok. 15 ms 
+        XMMatrixRotationX(static_cast<FLOAT>(sin(angle)) / 2.0f)
+    );
+    wvp_matrix = XMMatrixMultiply(
+        wvp_matrix,
+        XMMatrixTranslation(0.0f, 0.0f, 4.0f)
+    );
+    wvp_matrix = XMMatrixMultiply(
+        wvp_matrix,
+        XMMatrixPerspectiveFovLH(
+            45.0f, m_viewport.Width / m_viewport.Height, 1.0f, 100.0f
+        )
+    );
+    wvp_matrix = XMMatrixTranspose(wvp_matrix);
+    XMStoreFloat4x4(
+        &constantBufferData->matWorldViewProj, 	// zmienna typu vs_const_buffer_t z pkt. 2d
+        wvp_matrix
+    );
+    memcpy(
+        constantBufferData, 		// wskaŸnik do zmapowanej pamiêci (buf. sta³ego)
+        &constantBufferData, 		// zmienna typu vs_const_buffer_t z pkt. 2d
+        sizeof(constantBufferData)	// zmienna typu vs_const_buffer_t z pkt. 2d
+    );
+
 }

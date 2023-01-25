@@ -57,13 +57,14 @@ INT WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev_instance, _
 }
 
 RECT rc;
+FLOAT angle = 0;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     switch (uMsg) {
     case WM_CREATE:
     {
-        SetTimer(hwnd, 1, 1000, NULL);
+        SetTimer(hwnd, 1, 15, NULL);
         if (!triangle) {
             triangle = new D3D12HelloTriangle();
             rc = triangle->OnInit(hwnd);
@@ -79,6 +80,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         return 0;
     }
     case WM_TIMER:
+        triangle->onTimer(angle);
         InvalidateRect(hwnd, &rc, 0);
         return 0;
     case WM_PAINT:
