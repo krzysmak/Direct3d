@@ -27,7 +27,6 @@ public:
     virtual void OnUpdate();
     virtual void OnRender();
     virtual void OnDestroy();
-    virtual void onTimer(FLOAT &angle);
 
 private:
     static const UINT FrameCount = 2;
