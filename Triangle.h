@@ -18,6 +18,11 @@
 using namespace DirectX;
 using namespace Microsoft::WRL;
 
+struct vs_const_buffer_t {
+    XMFLOAT4X4 matWorldViewProj;
+    XMFLOAT4 padding[(256 - sizeof(XMFLOAT4X4)) / sizeof(XMFLOAT4)];
+};
+
 class D3D12HelloTriangle
 {
 public:
@@ -56,6 +61,9 @@ private:
     ComPtr<ID3D12Resource> m_vertexBuffer;
     ComPtr<ID3D12Resource> m_constShaderBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
+    vs_const_buffer_t constBuffer;
+    UINT8* constBufferData;
 
     // Synchronization objects.
     UINT m_frameIndex;

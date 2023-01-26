@@ -374,17 +374,19 @@ void D3D12HelloTriangle::LoadAssets()
             exit(0);
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {
-            .BufferLocation = m_constBufferShader->GetGPUVirtualAddress(),
+            .BufferLocation = m_constShaderBuffer->GetGPUVirtualAddress(),
             .SizeInBytes = CONST_BUFFER_SIZE
         };
 
         m_device->CreateConstantBufferView(&constBufferViewDesc, m_constBufferHeap->GetCPUDescriptorHandleForHeapStart());
-        DirectX::XMStoreFloat4x4(&const_buffer.matWorldViewProj, DirectX::XMMatrixIdentity());
+        DirectX::XMStoreFloat4x4(&constBuffer.matWorldViewProj, DirectX::XMMatrixIdentity());
 
 
         D3D12_RANGE readRange = { .Begin = 0, .End = 0 };
-        DX::ThrowIfFailed(m_constBufferShader->Map(0, &readRange, reinterpret_cast<void**>(&pConstBufferDataBegin)));
-        memcpy(pConstBufferDataBegin, &const_buffer, sizeof(const_buffer)); //?????????
+        hr = m_constShaderBuffer->Map(0, &readRange, reinterpret_cast<void**>(&constBufferData));
+        if (!SUCCEEDED(hr))
+            exit(0);
+        memcpy(constBufferData, &constBuffer, sizeof(constBuffer));
 
     }
 
