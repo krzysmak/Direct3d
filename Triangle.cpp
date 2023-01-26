@@ -457,6 +457,11 @@ void D3D12HelloTriangle::PopulateCommandList()
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+
+    ID3D12DescriptorHeap* heaps[] = { m_constBufferHeap.Get() };
+    m_commandList->SetDescriptorHeaps(1, heaps);
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_constBufferHeap->GetGPUDescriptorHandleForHeapStart());
+
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
@@ -468,7 +473,7 @@ void D3D12HelloTriangle::PopulateCommandList()
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // Record commands.
-    const float randomColor[] = { randColor(), randColor(), randColor(), 1.0f };
+    const float randomColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     m_commandList->ClearRenderTargetView(rtvHandle, randomColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
@@ -519,5 +524,31 @@ void D3D12HelloTriangle::OnDestroy()
 }
 
 void D3D12HelloTriangle::OnTimer(FLOAT& angle) {
-
+    XMMATRIX wvp_matrix;
+    wvp_matrix = XMMatrixMultiply(
+        XMMatrixRotationY(2.5f * angle),	// zmienna angle zmienia się
+        // o 1 / 64 co ok. 15 ms 
+        XMMatrixRotationX(static_cast<FLOAT>(sin(angle)) / 2.0f)
+    );
+    wvp_matrix = XMMatrixMultiply(
+        wvp_matrix,
+        XMMatrixTranslation(0.0f, 0.0f, 4.0f)
+    );
+    wvp_matrix = XMMatrixMultiply(
+        wvp_matrix,
+        XMMatrixPerspectiveFovLH(
+            45.0f, m_viewport.Width / m_viewport.Height, 1.0f, 100.0f
+        )
+    );
+    wvp_matrix = XMMatrixTranspose(wvp_matrix);
+    XMStoreFloat4x4(
+        &constBuffer.matWorldViewProj, 	// zmienna typu vs_const_buffer_t z pkt. 2d
+        wvp_matrix
+    );
+    memcpy(
+        constBufferData,
+        &constBuffer,
+        sizeof(constBuffer)
+    );
+    angle += (1.0f / 64.0f);
 }
