@@ -300,13 +300,36 @@ void D3D12HelloTriangle::LoadAssets()
 
 
         size_t const VERTEX_SIZE = sizeof(vertex_t) / sizeof(FLOAT);
-        vertex_t triangle_data[] = {
-          { 0.0f, 1.0f, 0.5f,         0.0f, 1.0f, 0.0f, 1.0f },
-          { 1.0f, 0.0f, 0.5f,         1.0f, 0.0f, 0.0f, 1.0f },
-          { -1.0f, -1.0f, 0.5f,       0.0f, 0.0f, 1.0f, 1.0f }
+        vertex_t cube_data[] = {
+            {-1.0f, 1.0f,-1.0f,  1.0f, 1.0f, 1.0f, 1.0f},
+            {1.0f, 1.0f,-1.0f,	1.0f, 1.0f, 1.0f, 1.0f},
+            {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+
+            {1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+            {1.0f,-1.0f,-1.0f,	1.0f, 1.0f, 1.0f, 1.0f},
+            {-1.0f,-1.0f,-1.0f,	1.0f, 1.0f, 1.0f, 1.0f},
+
+
+            {1.0f, 1.0f,-1.0f,  0.9f, 0.9f, 0.9f, 1.0f},
+            {1.0f, 1.0f, 1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
+            {1.0f,-1.0f,-1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
+
+            {1.0f, 1.0f, 1.0f,  0.9f, 0.9f, 0.9f, 1.0f},
+            {1.0f,-1.0f, 1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
+            {1.0f,-1.0f,-1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
+
+            {1.0f, 1.0f, 1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
+            {1.0f, 1.0f, -1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
+            {-1.0f, 1.0f, -1.0f,  0.9f, 0.9f, 0.9f, 1.0f},
+
+            {1.0f, 1.0f, 1.0f,  0.9f, 0.9f, 0.9f, 1.0f},
+            {-1.0f, 1.0f, -1.0f,0.9f, 0.9f, 0.9f, 1.0f},
+            {-1.0f, 1.0f, 1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
+
+
         };
-        size_t const VERTEX_BUFFER_SIZE = sizeof(triangle_data);
-        size_t const NUM_VERTICES = VERTEX_BUFFER_SIZE / sizeof(vertex_t);
+        size_t const VERTEX_BUFFER_SIZE = sizeof(cube_data);
+        NUM_VERTICES = VERTEX_BUFFER_SIZE / sizeof(vertex_t);
 
         //const UINT vertexBufferSize = sizeof(triangleVertices);
 
@@ -333,7 +356,7 @@ void D3D12HelloTriangle::LoadAssets()
         if (!SUCCEEDED(hr))
             exit(0);
 
-        memcpy(pVertexDataBegin, triangle_data, sizeof(triangle_data));
+        memcpy(pVertexDataBegin, cube_data, sizeof(cube_data));
         m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
@@ -477,7 +500,7 @@ void D3D12HelloTriangle::PopulateCommandList()
     m_commandList->ClearRenderTargetView(rtvHandle, randomColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->DrawInstanced(3, 1, 0, 0);
+    m_commandList->DrawInstanced(NUM_VERTICES, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
