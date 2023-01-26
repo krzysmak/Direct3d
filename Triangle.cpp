@@ -124,6 +124,19 @@ void D3D12HelloTriangle::LoadPipeline(HWND hwnd)
         }
     }
 
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC constBufferHeapDesc = {
+            .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+            .NumDescriptors = 1,
+            .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+            .NodeMask = 0
+        };
+        hr = (m_device->CreateDescriptorHeap(&constBufferHeapDesc, IID_PPV_ARGS(&m_constBufferHeap)));
+        if (!SUCCEEDED(hr))
+            exit(0);
+    }
+
+
     hr = m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator));
     if (!SUCCEEDED(hr))
         exit(0);
@@ -328,6 +341,53 @@ void D3D12HelloTriangle::LoadAssets()
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
     }
+
+    {
+        size_t const CONST_BUFFER_SIZE = 256;
+        D3D12_HEAP_PROPERTIES heapProps = {
+            .Type = D3D12_HEAP_TYPE_UPLOAD,
+            .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+            .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
+            .CreationNodeMask = 1,
+            .VisibleNodeMask = 1
+        };
+        D3D12_RESOURCE_DESC desc = {
+            .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+            .Alignment = 0,
+            .Width = CONST_BUFFER_SIZE,
+            .Height = 1,
+            .DepthOrArraySize = 1,
+            .MipLevels = 1,
+            .Format = DXGI_FORMAT_UNKNOWN,
+            .SampleDesc = {.Count = 1, .Quality = 0 },
+            .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+            .Flags = D3D12_RESOURCE_FLAG_NONE,
+        };
+        hr = m_device->CreateCommittedResource(
+            &heapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_constShaderBuffer));
+        if (!SUCCEEDED(hr))
+            exit(0);
+
+        D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {
+            .BufferLocation = m_constBufferShader->GetGPUVirtualAddress(),
+            .SizeInBytes = CONST_BUFFER_SIZE
+        };
+
+        m_device->CreateConstantBufferView(&constBufferViewDesc, m_constBufferHeap->GetCPUDescriptorHandleForHeapStart());
+        DirectX::XMStoreFloat4x4(&const_buffer.matWorldViewProj, DirectX::XMMatrixIdentity());
+
+
+        D3D12_RANGE readRange = { .Begin = 0, .End = 0 };
+        DX::ThrowIfFailed(m_constBufferShader->Map(0, &readRange, reinterpret_cast<void**>(&pConstBufferDataBegin)));
+        memcpy(pConstBufferDataBegin, &const_buffer, sizeof(const_buffer)); //?????????
+
+    }
+
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {

@@ -47,12 +47,14 @@ private:
     ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_constBufferHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
     UINT m_rtvDescriptorSize;
 
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
+    ComPtr<ID3D12Resource> m_constShaderBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
     // Synchronization objects.
