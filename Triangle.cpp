@@ -136,6 +136,18 @@ void D3D12HelloTriangle::LoadPipeline(HWND hwnd)
             exit(0);
     }
 
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC depthBufferHeapDesc = {
+            .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+            .NumDescriptors = 1,
+            .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+            .NodeMask = 0,
+        };
+        hr = (m_device->CreateDescriptorHeap(&depthBufferHeapDesc, IID_PPV_ARGS(&m_depthBufferHeap)));
+        if (!SUCCEEDED(hr))
+            exit(0);
+    }
+
 
     hr = m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator));
     if (!SUCCEEDED(hr))
@@ -192,7 +204,26 @@ void D3D12HelloTriangle::LoadAssets()
 #else
         UINT compileFlags = 0;
 #endif
-
+        D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {
+            .DepthEnable = TRUE,
+            .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
+            .DepthFunc = D3D12_COMPARISON_FUNC_LESS,
+            .StencilEnable = FALSE,
+            .StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK,
+            .StencilWriteMask = D3D12_DEFAULT_STENCIL_READ_MASK,
+            .FrontFace = {
+                .StencilFailOp = D3D12_STENCIL_OP_KEEP,
+                .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
+                .StencilPassOp = D3D12_STENCIL_OP_KEEP,
+                .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS
+            },
+            .BackFace = {
+                .StencilFailOp = D3D12_STENCIL_OP_KEEP,
+                .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
+                .StencilPassOp = D3D12_STENCIL_OP_KEEP,
+                .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS
+            }
+        };
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
         //psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
@@ -227,6 +258,8 @@ void D3D12HelloTriangle::LoadAssets()
         psoDesc.RasterizerState.AntialiasedLineEnable = FALSE;
         psoDesc.RasterizerState.ForcedSampleCount = 0;
         psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+        psoDesc.DepthStencilState = depthStencilDesc;
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
         D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
         {
@@ -405,6 +438,51 @@ void D3D12HelloTriangle::LoadAssets()
         DirectX::XMStoreFloat4x4(&constBuffer.matWorldViewProj, DirectX::XMMatrixIdentity());
 
 
+        D3D12_HEAP_PROPERTIES depthHeapProps = {
+            .Type = D3D12_HEAP_TYPE_DEFAULT,
+            .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+            .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
+            .CreationNodeMask = 1,
+            .VisibleNodeMask = 1,
+        };
+        D3D12_RESOURCE_DESC depthDesc = {
+            .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+            .Alignment = 0,
+            .Width = (UINT64)m_viewport.Width,	// width of render target
+            .Height = (UINT)m_viewport.Height, // height of render target
+            .DepthOrArraySize = 1,
+            .MipLevels = 0,
+            .Format = DXGI_FORMAT_D32_FLOAT,
+            .SampleDesc = {.Count = 1, .Quality = 0 },
+            .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+            .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+        };
+        D3D12_CLEAR_VALUE clearValue{
+            .Format = DXGI_FORMAT_D32_FLOAT,
+            .DepthStencil = {.Depth = 1.0f, .Stencil = 0 }
+        };
+        D3D12_DEPTH_STENCIL_VIEW_DESC depthBufferViewDesc{
+            .Format = DXGI_FORMAT_D32_FLOAT,
+            .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
+            .Flags = D3D12_DSV_FLAG_NONE,
+            .Texture2D = {}
+        };
+
+        hr = m_device->CreateCommittedResource(
+            &depthHeapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &depthDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            &clearValue,
+            IID_PPV_ARGS(&m_depthBuffer));
+        if (!SUCCEEDED(hr))
+            exit(0);
+
+        m_device->CreateDepthStencilView(m_depthBuffer.Get(), 
+                                         &depthBufferViewDesc, 
+                                         m_depthBufferHeap->GetCPUDescriptorHandleForHeapStart());
+
+
         D3D12_RANGE readRange = { .Begin = 0, .End = 0 };
         hr = m_constShaderBuffer->Map(0, &readRange, reinterpret_cast<void**>(&constBufferData));
         if (!SUCCEEDED(hr))
@@ -493,11 +571,16 @@ void D3D12HelloTriangle::PopulateCommandList()
     m_commandList->ResourceBarrier(1, &barrier);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = { .ptr = m_depthBufferHeap->GetCPUDescriptorHandleForHeapStart().ptr };//could have an error TODO
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &depthStencilHandle);
+    
+    
+    //m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &depthHandle);
 
     // Record commands.
     const float randomColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     m_commandList->ClearRenderTargetView(rtvHandle, randomColor, 0, nullptr);
+    m_commandList->ClearDepthStencilView(depthStencilHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->DrawInstanced(NUM_VERTICES, 1, 0, 0);

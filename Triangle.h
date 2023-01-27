@@ -52,6 +52,7 @@ private:
     ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_depthBufferHeap;
     ComPtr<ID3D12DescriptorHeap> m_constBufferHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
@@ -60,6 +61,7 @@ private:
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     ComPtr<ID3D12Resource> m_constShaderBuffer;
+    ComPtr<ID3D12Resource> m_depthBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
     vs_const_buffer_t constBuffer;
