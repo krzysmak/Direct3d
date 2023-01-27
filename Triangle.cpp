@@ -333,6 +333,7 @@ void D3D12HelloTriangle::LoadAssets()
 
 
         size_t const VERTEX_SIZE = sizeof(vertex_t) / sizeof(FLOAT);
+        /*
         vertex_t cube_data[] = {
             {-1.0f, 1.0f,-1.0f,  1.0f, 1.0f, 1.0f, 1.0f},
             {1.0f, 1.0f,-1.0f,	1.0f, 1.0f, 1.0f, 1.0f},
@@ -362,6 +363,44 @@ void D3D12HelloTriangle::LoadAssets()
 
         };
         size_t const VERTEX_BUFFER_SIZE = sizeof(cube_data);
+        */
+        vertex_t tree_data[] = {
+            {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+
+            {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+
+
+            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+
+            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+
+
+            {1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+
+            {1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+
+
+            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+
+            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+        };
+        size_t const VERTEX_BUFFER_SIZE = sizeof(tree_data);
         NUM_VERTICES = VERTEX_BUFFER_SIZE / sizeof(vertex_t);
 
         //const UINT vertexBufferSize = sizeof(triangleVertices);
@@ -389,7 +428,8 @@ void D3D12HelloTriangle::LoadAssets()
         if (!SUCCEEDED(hr))
             exit(0);
 
-        memcpy(pVertexDataBegin, cube_data, sizeof(cube_data));
+
+        memcpy(pVertexDataBegin, tree_data, sizeof(tree_data));
         m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
