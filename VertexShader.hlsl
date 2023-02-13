@@ -1,7 +1,11 @@
 cbuffer vs_const_buffer_t {
 	float4x4 matWorldViewProj;
-	float4 padding[12];	// zapewnia buforowi sta³emu rozmiar 
- 					// bêd¹cy krotnoœci¹ 256 bajtów
+	float4x4 matWorldView;
+	float4x4 matView;
+	float4 colMaterial;
+	float4 colLight;
+	float4 dirLight;
+	float4 padding;
 };
 
 struct vs_output_t {
@@ -9,9 +13,16 @@ struct vs_output_t {
 	float4 color : COLOR;
 };
 
-vs_output_t main(float3 pos : POSITION, float4 col : COLOR) {
+vs_output_t main(
+	float3 pos : POSITION,
+	float3 norm : NORMAL,
+	float4 col : COLOR) {
 	vs_output_t result;
+	float4 NW = mul(float4(norm, 0.0f), matWorldView);
+	float4 LW = mul(dirLight, matView);
 	result.position = mul(float4(pos, 1.0f), matWorldViewProj);
-	result.color = col;
+	result.color = mul(
+		max(-dot(normalize(LW), normalize(NW)), 0.0f),
+		colLight * col); // lub colMaterial zamiast col
 	return result;
 }

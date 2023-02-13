@@ -20,7 +20,12 @@ using namespace Microsoft::WRL;
 
 struct vs_const_buffer_t {
     XMFLOAT4X4 matWorldViewProj;
-    XMFLOAT4 padding[(256 - sizeof(XMFLOAT4X4)) / sizeof(XMFLOAT4)];
+    XMFLOAT4X4 matWorldView;
+    XMFLOAT4X4 matView;
+    XMFLOAT4 colMaterial;
+    XMFLOAT4 colLight;
+    XMFLOAT4 dirLight;
+    XMFLOAT4 padding[(256 - 3 * (sizeof(XMFLOAT4X4) + sizeof(XMFLOAT4))) / sizeof(XMFLOAT4)];
 };
 
 class D3D12HelloTriangle
@@ -39,6 +44,7 @@ private:
     struct Vertex
     {
         XMFLOAT3 position;
+        XMFLOAT3 normal;
         XMFLOAT4 color;
     };
 

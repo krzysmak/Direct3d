@@ -272,6 +272,15 @@ void D3D12HelloTriangle::LoadAssets()
             .InstanceDataStepRate = 0
         },
         {
+           .SemanticName = "NORMAL",
+           .SemanticIndex = 0,
+           .Format = DXGI_FORMAT_R32G32B32_FLOAT,
+           .InputSlot = 0,
+           .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+           .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+           .InstanceDataStepRate = 0
+        },
+        {
             .SemanticName = "COLOR",
             .SemanticIndex = 0,
             .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
@@ -327,80 +336,51 @@ void D3D12HelloTriangle::LoadAssets()
         */
         struct vertex_t {
             FLOAT position[3];
+            FLOAT normal[3];
             FLOAT color[4];
         };
 
 
 
         size_t const VERTEX_SIZE = sizeof(vertex_t) / sizeof(FLOAT);
-        /*
-        vertex_t cube_data[] = {
-            {-1.0f, 1.0f,-1.0f,  1.0f, 1.0f, 1.0f, 1.0f},
-            {1.0f, 1.0f,-1.0f,	1.0f, 1.0f, 1.0f, 1.0f},
-            {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
-
-            {1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
-            {1.0f,-1.0f,-1.0f,	1.0f, 1.0f, 1.0f, 1.0f},
-            {-1.0f,-1.0f,-1.0f,	1.0f, 1.0f, 1.0f, 1.0f},
-
-
-            {1.0f, 1.0f,-1.0f,  0.9f, 0.9f, 0.9f, 1.0f},
-            {1.0f, 1.0f, 1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
-            {1.0f,-1.0f,-1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
-
-            {1.0f, 1.0f, 1.0f,  0.9f, 0.9f, 0.9f, 1.0f},
-            {1.0f,-1.0f, 1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
-            {1.0f,-1.0f,-1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
-
-            {1.0f, 1.0f, 1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
-            {1.0f, 1.0f, -1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
-            {-1.0f, 1.0f, -1.0f,  0.9f, 0.9f, 0.9f, 1.0f},
-
-            {1.0f, 1.0f, 1.0f,  0.9f, 0.9f, 0.9f, 1.0f},
-            {-1.0f, 1.0f, -1.0f,0.9f, 0.9f, 0.9f, 1.0f},
-            {-1.0f, 1.0f, 1.0f,	0.9f, 0.9f, 0.9f, 1.0f},
-
-
-        };
-        size_t const VERTEX_BUFFER_SIZE = sizeof(cube_data);
-        */
+        
         vertex_t tree_data[] = {
-            {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {-10.0f, 10.0f,10.0f,   0.0f, 0.0f, -1.0f,  1.0f,1.0f,1.0f,1.0f},
+            {10.0f,10.0f,10.0f,    0.0f, 0.0f, -1.0f,  1.0f,1.0f,1.0f,1.0f},
+            {-10.0f,-10.0f,10.0f,  0.0f, 0.0f, -1.0f,   1.0f,1.0f,1.0f,1.0f},
 
-            {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {10.0f, 10.0f,10.0f,   0.0f, 0.0f, -1.0f,	1.0f,1.0f,1.0f,1.0f},
+            {10.0f,-10.0f,10.0f,	 0.0f, 0.0f, -1.0f,   1.0f,1.0f,1.0f,1.0f},
+            {-10.0f,-10.0f,10.0f,	 0.0f, 0.0f, -1.0f,  1.0f,1.0f,1.0f,1.0f},
 
+            {10.0f, 10.0f,10.0f,   -1.0f, 0.0f, 0.0f,  1.0f,1.0f,1.0f,1.0f},
+            {10.0f,10.0f,-10.0f,    -1.0f, 0.0f, 0.0f,  1.0f,1.0f,1.0f,1.0f},
+            {10.0f,-10.0f,10.0f,  -1.0f, 0.0f, 0.0f,   1.0f,1.0f,1.0f,1.0f},
 
-            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {10.0f,-10.0f,10.0f,  -1.0f, 0.0f, 0.0f,   1.0f,1.0f,1.0f,1.0f},
+            {10.0f,10.0f,-10.0f,    -1.0f, 0.0f, 0.0f,  1.0f,1.0f,1.0f,1.0f},
+            {10.0f, -10.0f,-10.0f,   -1.0f, 0.0f, 0.0f,  1.0f,1.0f,1.0f,1.0f},
 
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {-10.0f, 10.0f,10.0f,   1.0f, 0.0f, 0.0f,  1.0f,1.0f,1.0f,1.0f},
+            {-10.0f,-10.0f,10.0f,  1.0f, 0.0f, 0.0f,   1.0f,1.0f,1.0f,1.0f},
+            {-10.0f,10.0f,-10.0f,    1.0f, 0.0f, 0.0f,  1.0f,1.0f,1.0f,1.0f},
 
+            {-10.0f,10.0f,-10.0f,    1.0f, 0.0f, 0.0f,  1.0f,1.0f,1.0f,1.0f},
+            {-10.0f,-10.0f,10.0f,  1.0f, 0.0f, 0.0f,   1.0f,1.0f,1.0f,1.0f},
+            {-10.0f, -10.0f,-10.0f,   1.0f, 0.0f, 0.0f,  1.0f,1.0f,1.0f,1.0f},
 
-            {1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {10.0f,10.0f,-10.0f,    0.0f, 0.0f, 1.0f,  1.0f,1.0f,1.0f,1.0f},
+            {-10.0f, 10.0f,-10.0f,   0.0f, 0.0f, 1.0f,  1.0f,1.0f,1.0f,1.0f},
+            {-10.0f,-10.0f,-10.0f,  0.0f, 0.0f, 1.0f,   1.0f,1.0f,1.0f,1.0f},
 
-            {1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-
-
-            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f},
+            {10.0f,-10.0f,-10.0f,	 0.0f, 0.0f, 1.0f,   1.0f,1.0f,1.0f,1.0f},
+            {10.0f, 10.0f,-10.0f,   0.0f, 0.0f, 1.0f,	1.0f,1.0f,1.0f,1.0f},
+            {-10.0f,-10.0f,-10.0f,	 0.0f, 0.0f, 1.0f,  1.0f,1.0f,1.0f,1.0f},
         };
         size_t const VERTEX_BUFFER_SIZE = sizeof(tree_data);
+
+        
+        //size_t const VERTEX_BUFFER_SIZE = sizeof(tree_data);
         NUM_VERTICES = VERTEX_BUFFER_SIZE / sizeof(vertex_t);
 
         //const UINT vertexBufferSize = sizeof(triangleVertices);
@@ -476,6 +456,11 @@ void D3D12HelloTriangle::LoadAssets()
 
         m_device->CreateConstantBufferView(&constBufferViewDesc, m_constBufferHeap->GetCPUDescriptorHandleForHeapStart());
         DirectX::XMStoreFloat4x4(&constBuffer.matWorldViewProj, DirectX::XMMatrixIdentity());
+        DirectX::XMStoreFloat4x4(&constBuffer.matWorldView, DirectX::XMMatrixIdentity());
+        DirectX::XMStoreFloat4x4(&constBuffer.matView, DirectX::XMMatrixIdentity());
+        DirectX::XMStoreFloat4(&constBuffer.colMaterial, { 0.0f,0.0f,0.0f,1.0f });
+        DirectX::XMStoreFloat4(&constBuffer.colLight, { 1.0f,1.0f,1.0f,1.0f });
+        DirectX::XMStoreFloat4(&constBuffer.dirLight, { 0.0f,0.0f,1.0f,0.0f });
 
 
         D3D12_HEAP_PROPERTIES depthHeapProps = {
@@ -600,7 +585,7 @@ void D3D12HelloTriangle::PopulateCommandList()
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
     ID3D12DescriptorHeap* heaps[] = { m_constBufferHeap.Get() };
-    m_commandList->SetDescriptorHeaps(1, heaps);
+    m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
     m_commandList->SetGraphicsRootDescriptorTable(0, m_constBufferHeap->GetGPUDescriptorHandleForHeapStart());
 
     m_commandList->RSSetViewports(1, &m_viewport);
@@ -670,31 +655,47 @@ void D3D12HelloTriangle::OnDestroy()
 }
 
 void D3D12HelloTriangle::OnTimer(FLOAT& angle) {
-    XMMATRIX wvp_matrix;
-    wvp_matrix = XMMatrixMultiply(
+    XMMATRIX wvp_matrix, v_matrix, wv_matrix;
+
+    v_matrix = XMMatrixTranslation(0.0f, 0.0f, 4.0f);
+
+    wv_matrix = XMMatrixMultiply(
         XMMatrixRotationY(2.5f * angle),	// zmienna angle zmienia się
         // o 1 / 64 co ok. 15 ms 
-        XMMatrixRotationX(static_cast<FLOAT>(sin(angle)) / 2.0f)
+        v_matrix
     );
+
     wvp_matrix = XMMatrixMultiply(
-        wvp_matrix,
-        XMMatrixTranslation(0.0f, 0.0f, 4.0f)
-    );
-    wvp_matrix = XMMatrixMultiply(
-        wvp_matrix,
+        wv_matrix,
         XMMatrixPerspectiveFovLH(
             45.0f, m_viewport.Width / m_viewport.Height, 1.0f, 100.0f
         )
     );
     wvp_matrix = XMMatrixTranspose(wvp_matrix);
-    XMStoreFloat4x4(
+    v_matrix = XMMatrixTranspose(v_matrix);
+    wv_matrix = XMMatrixTranspose(wv_matrix);
+
+    DirectX::XMStoreFloat4x4(
         &constBuffer.matWorldViewProj, 	// zmienna typu vs_const_buffer_t z pkt. 2d
         wvp_matrix
+    );
+    
+    DirectX::XMStoreFloat4x4(
+        &constBuffer.matWorldView, 	// zmienna typu vs_const_buffer_t z pkt. 2d
+        wv_matrix
+    ); 
+    
+    DirectX::XMStoreFloat4x4(
+        &constBuffer.matView, 	// zmienna typu vs_const_buffer_t z pkt. 2d
+        v_matrix
     );
     memcpy(
         constBufferData,
         &constBuffer,
         sizeof(constBuffer)
-    );
-    angle += (1.0f / 64.0f);
+    ); 
+    if (GetAsyncKeyState(VK_LEFT) < 0)
+        angle += (1.0f / 64.0f);
+    if (GetAsyncKeyState(VK_RIGHT) < 0)
+        angle -= (1.0f / 64.0f);
 }
