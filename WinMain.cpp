@@ -29,7 +29,7 @@ INT WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev_instance, _
     HWND hwnd = CreateWindowEx(
         0,                              // Optional window styles.
         CLASS_NAME,                     // Window class
-        TEXT("Learn to Program Windows"),    // Window text
+        TEXT("Wiêzieñ szeœcianu"),    // Window text
         WS_OVERLAPPEDWINDOW,            // Window style
 
         // Size and position
